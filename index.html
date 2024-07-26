@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SimpleSearch/SS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="icon.png">
+    <style>
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('font.ttf') format('truetype');
+        }
+
+        body {
+            font-family: 'CustomFont', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: white;
+            text-align: center;
+            position: relative; /* Ensure body is positioned to use pseudo-elements */
+            overflow: auto;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 50%; /* Center vertically */
+            left: 50%; /* Center horizontally */
+            width: 200%; /* Expand width */
+            height: 200%; /* Expand height */
+            background-image: url('background.png');
+            background-size: cover; /* Ensure it covers the area */
+            background-position: center; /* Center the image */
+            background-repeat: no-repeat; /* Prevent tiling */
+            z-index: -1; /* Behind other elements */
+            filter: blur(10px); /* Blur effect */
+            transform: translate(-50%, -50%); /* Adjust positioning to center */
+        }
+
+        .mainbox {
+            display: inline-block;
+            background: #333;
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 50px;
+            text-align: left;
+            max-width: 90%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .linksbox {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: #333;
+            padding: 20px;
+            border-radius: 20px;
+            margin: 20px auto;
+            width: fit-content;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        select, input[type="text"], button {
+            font-family: 'CustomFont', sans-serif;
+            padding: 10px;
+            margin: 5px;
+            border: 2px solid #666;
+            border-radius: 10px;
+            background: #222;
+            color: #ccc;
+        }
+
+        button {
+            background: #444;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #555;
+        }
+
+        .linksbox button {
+            background: #222;
+            color: #ccc;
+            border: 2px solid #666;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+            font-family: 'CustomFont', sans-serif;
+        }
+
+        .linksbox button:hover {
+            background: #b16286;
+            color: #fff;
+        }
+
+        .links-section {
+            margin: 0 20px;
+            max-width: 200px;
+        }
+
+        .links-section h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+            color: #ccc;
+        }
+
+        .links-section.media h2 {
+            color: #cc241d;
+        }
+
+        .links-section.development h2 {
+            color: #458588;
+        }
+
+        .links-section.chat h2 {
+            color: #d79921;
+        }
+
+        .links-section.miscellaneous h2 {
+            color: #98971a;
+        }
+
+        .links-section ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .links-section ul li {
+            margin: 5px 0;
+        }
+
+        .links-section ul li a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .links-section ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .form-container {
+            display: flex;
+            align-items: center; /* Align items vertically in the center */
+            justify-content: center; /* Center items horizontally */
+            margin-top: 20px; /* Add space between elements */
+        }
+
+        /* Custom Dropdown Styles */
+        .dropdown {
+            margin-right: 10px; /* Space between dropdown and search input */
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 10px;
+        }
+
+        .dropdown-content div {
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-content img {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .dropdown-content div:hover {
+            background-color: #555;
+        }
+
+        .show { display: block; }
+
+        .dropdown-button {
+            padding: 10px;
+            border: 2px solid #666;
+            border-radius: 10px;
+            background: #222;
+            color: #ccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-button img {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+
+        .dropdown-button::after {
+            content: '▼';
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .links-section {
+                flex: 1 1 100%;
+                max-width: 100%;
+            }
+
+            .mainbox, .linksbox {
+                padding: 15px;
+                border-radius: 20px;
+            }
+        }
+
+        /* Consent and Prompt Modal styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .modal-content h2 {
+            margin-top: 0;
+            font-size: 1.5em;
+            color: #ccc;
+        }
+
+        .modal-content p {
+            color: #ccc;
+        }
+
+        .modal button {
+            margin-top: 10px;
+        }
+
+        /* LocalStorage Toggle Styles */
+        .toggle-container {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-label {
+            margin-left: 10px;
+            color: #ccc;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            border-radius: 50%;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #4caf50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+    <script type="text/javascript">
+        function startTime() {
+            var today = new Date();
+            var h = today.getHours();
+            var m = today.getMinutes();
+            var s = today.getSeconds();
+            m = checkTime(m);
+            s = checkTime(s);
+            document.getElementById('txt').innerHTML = "Local Time: " + h + ":" + m + ":" + s;
+            setTimeout(startTime, 500);
+        }
+
+        function checkTime(i) {
+            if (i < 10) {
+                i = "0" + i;
+            }
+            return i;
+        }
+
+        function setSearchEngine(actionUrl, engineName) {
+            var form = document.getElementById('searchForm');
+            form.action = actionUrl;
+            if (localStorage.getItem('localStorageEnabled') === 'true') {
+                localStorage.setItem('selectedEngine', engineName);
+            }
+        }
+
+        function toggleDropdown() {
+            document.getElementById("dropdown-content").classList.toggle("show");
+        }
+
+        function selectEngine(engine, url) {
+            document.getElementById("dropdown-button-text").textContent = engine;
+            document.getElementById("dropdown-button-img").src = `icons/${engine.toLowerCase()}.png`;
+            setSearchEngine(url, engine);
+            toggleDropdown();
+        }
+
+        function loadSelectedEngine() {
+            var selectedEngine = localStorage.getItem('selectedEngine') || 'Google';
+            var engines = {
+                'Google': 'https://google.com/search',
+                'DuckDuckGo': 'https://duckduckgo.com/',
+                'Ecosia': 'https://www.ecosia.org/search',
+                'PrivacyWall': 'https://privacywall.org/search/secure',
+                'Qwant': 'https://qwant.com/',
+                'Bing': 'https://bing.com/search',
+                'SearXNG': 'https://sx.zorby.top/search'
+            };
+
+            var url = engines[selectedEngine] || engines['Google'];
+            document.getElementById("dropdown-button-text").textContent = selectedEngine;
+            document.getElementById("dropdown-button-img").src = `icons/${selectedEngine.toLowerCase()}.png`;
+            document.getElementById('searchForm').action = url;
+        }
+
+        function showConsentModal() {
+            var consentModal = document.createElement('div');
+            consentModal.className = 'modal';
+            consentModal.innerHTML = `
+                <div class="modal-content">
+                    <h2>Consent Required</h2>
+                    <p>We use localStorage, a technology similar to cookies, to save your search engine preferences ONLY on your device. Do you consent to this?</p>
+                    <button onclick="declineConsent()">No, I do not consent</button>
+                    <button onclick="acceptConsent()">Yes, I consent</button>
+                </div>`
+            document.body.appendChild(consentModal);
+        }
+
+        function acceptConsent() {
+            localStorage.setItem('consentGiven', 'true');
+            localStorage.setItem('firstVisit', 'false');
+            localStorage.setItem('localStorageEnabled', 'true');
+            document.getElementById('storageToggle').checked = true;
+            document.querySelector('.modal').remove();
+            loadSelectedEngine();
+        }
+
+        function declineConsent() {
+            localStorage.setItem('consentGiven', 'false');
+            localStorage.setItem('firstVisit', 'false');
+            localStorage.setItem('localStorageEnabled', 'false');
+            document.getElementById('storageToggle').checked = false;
+            document.querySelector('.modal').remove();
+        }
+
+        function showPromptModal() {
+            var promptModal = document.createElement('div');
+            promptModal.className = 'modal';
+            promptModal.innerHTML = `
+                <div class="modal-content">
+                    <h2>Enter Location</h2>
+                    <p>Please enter your location for the weather report (e.g., london, new-york).</p>
+                    <input type="text" id="locationInput" placeholder="Location" onkeydown="handleKeyEvent(event, 'weather')" autocomplete="off"/>
+                    <button onclick="handleLocation()">Submit</button>
+                    <button onclick="closePromptModal()">Cancel</button>
+                </div>`
+            document.body.appendChild(promptModal);
+
+            document.getElementById("locationInput").focus();
+        }
+        
+        function handleKeyEvent(event, type) {
+            // Handle Enter key for different types
+            if (event.key === 'Enter') {
+                if (type === 'weather') {
+                    handleLocation(); // Redirect to the appropriate weather report
+                } else if (type === 'search') {
+                    document.getElementById('searchForm').submit(); // Redirect to the search engine page
+                }
+            }
+        }
+
+
+        function handleLocation() {
+            var location = document.getElementById('locationInput').value.trim();
+            if (location) {
+                window.open("https://wttr.in/" + location, "_blank");
+            }
+            closePromptModal();
+        }
+
+        function closePromptModal() {
+            document.querySelector('.modal').remove();
+        }
+
+        function toggleLocalStorage() {
+            var isChecked = document.getElementById('storageToggle').checked;
+            localStorage.setItem('localStorageEnabled', isChecked ? 'true' : 'false');
+            if (isChecked) {
+                if (localStorage.getItem('consentGiven') === 'true') {
+                    loadSelectedEngine();
+                } else {
+                    showConsentModal();
+                }
+            } else {
+                localStorage.removeItem('selectedEngine');
+            }
+        }
+
+        function initializeLocalStorage() {
+            var localStorageEnabled = localStorage.getItem('localStorageEnabled');
+            var consentGiven = localStorage.getItem('consentGiven');
+            var firstVisit = localStorage.getItem('firstVisit');
+
+            if (firstVisit === null) {
+                localStorage.setItem('firstVisit', 'true');
+                showConsentModal();
+            } else if (localStorageEnabled === 'true') {
+                if (consentGiven === 'true') {
+                    document.getElementById('storageToggle').checked = true;
+                    loadSelectedEngine();
+                } else {
+                    document.getElementById('storageToggle').checked = false;
+                }
+            } else {
+                document.getElementById('storageToggle').checked = false;
+            }
+        }
+
+        window.onload = function() {
+            startTime();
+            initializeLocalStorage();
+            document.getElementById('searchInput').focus(); // Focus the search input field
+        }
+    </script>
+</head>
+<body>
+    <div class="toggle-container">
+        <label class="toggle-label">LocalStorage: </label>
+        <label class="toggle-switch">
+            <input type="checkbox" id="storageToggle" onchange="toggleLocalStorage()">
+            <span class="slider"></span>
+        </label>
+    </div>
+    <div class="mainbox">
+        <h2>SimpleSearch/SS</h2>
+        <div class="form-container">
+            <div class="dropdown">
+                <div id="dropdown-button" class="dropdown-button" onclick="toggleDropdown()">
+                    <img id="dropdown-button-img" src="icons/google.png" alt="Icon">
+                    <span id="dropdown-button-text">Google</span>
+                </div>
+                <div id="dropdown-content" class="dropdown-content">
+                    <div onclick="selectEngine('Google', 'https://google.com/search')">
+                        <img src="icons/google.png" alt="Google"> Google
+                    </div>
+                    <div onclick="selectEngine('DuckDuckGo', 'https://duckduckgo.com/')">
+                        <img src="icons/duckduckgo.png" alt="DuckDuckGo"> DuckDuckGo
+                    </div>
+                    <div onclick="selectEngine('Ecosia', 'https://www.ecosia.org/search')">
+                        <img src="icons/ecosia.png" alt="Ecosia"> Ecosia
+                    </div>
+                    <div onclick="selectEngine('PrivacyWall', 'https://privacywall.org/search/secure')">
+                        <img src="icons/privacywall.png" alt="PrivacyWall"> PrivacyWall
+                    </div>
+                    <div onclick="selectEngine('Qwant', 'https://qwant.com/')">
+                        <img src="icons/qwant.png" alt="Qwant"> Qwant
+                    </div>
+                    <div onclick="selectEngine('Bing', 'https://bing.com/search')">
+                        <img src="icons/bing.png" alt="Bing"> Bing
+                    </div>
+                    <div onclick="selectEngine('SearXNG', 'https://sx.zorby.top/search')">
+                        <img src="icons/searxng.png" alt="SearXNG"> SearXNG
+                    </div>
+                </div>
+            </div>
+            <form id="searchForm" action="https://google.com/search" method="get" onkeydown="handleKeyEvent(event, 'search')">
+                <input type="text" id="searchInput" name="q" placeholder="Search..." autocomplete="off" required onkeydown="handleKeyEvent(event, 'search')">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div id="txt"></div>
+    </div>
+    <div class="linksbox">
+        <div class="links-section media">
+            <h2>Media</h2>
+            <ul>
+                <li><a href="https://youtube.com" target="_blank">YouTube</a></li>
+                <li><a href="https://twitch.tv" target="_blank">Twitch</a></li>
+                <li><a href="https://x.com" target="_blank">Twitter/X</a></li>
+                <li><a href="https://odysee.com" target="_blank">Odysee</a></li>
+                <li><a href="https://reddit.com" target="_blank">Reddit</a></li>
+            </ul>
+        </div>
+        <div class="links-section development">
+            <h2>Development</h2>
+            <ul>
+                <li><a href="https://github.com" target="_blank">GitHub</a></li>
+                <li><a href="https://aws.amazon.com" target="_blank">AWS</a></li>
+                <li><a href="https://replit.com" target="_blank">Replit</a></li>
+                <li><a href="https://stackoverflow.com" target="_blank">StackOverflow</a></li>
+            </ul>
+        </div>
+        <div class="links-section chat">
+            <h2>Chat</h2>
+            <ul>
+                <li><a href="https://discord.com" target="_blank">Discord</a></li>
+                <li><a href="https://www.guilded.gg" target="_blank">Guilded</a></li>
+                <li><a href="https://element.io" target="_blank">Element</a></li>
+                <li><a href="https://signal.org" target="_blank">Signal</a></li>
+            </ul>
+        </div>
+        <div class="links-section miscellaneous">
+            <h2>Miscellaneous</h2>
+            <ul>
+                <li><a href="https://based.cooking" target="_blank">based.cooking</a></li>
+                <li><a href="https://wiby.org" target="_blank">wiby.org</a></li>
+                <li><a href="#" onclick="showPromptModal()">wttr.in</a></li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
